@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hussein Al-jrabaa · Banking application support and payment integration</title>
+<meta name="description" content="Hussein Al-jrabaa, Technical Specialist at Arab Bank. Application support and payment integration for banks, based in Amman, Jordan.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ink ramp */
+    --deep:#07080d; --bg:#0b0d14; --card:#11141c; --raised:#1a1e28;
+    --line:rgba(238,240,245,.08); --line-strong:rgba(238,240,245,.14);
+    --text:#eef0f5; --text-2:#a3a9b8; --muted:#7a8296;
+    --accent:#4fc4b2; --positive:#4cc38a; --warn:#d9a54a;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --sans:"IBM Plex Sans",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+  .mono{font-family:var(--mono)}
+  svg.i{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;background:rgba(11,13,20,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .logo{font-size:16px;font-weight:500}
+  .links{display:flex;align-items:center;gap:28px;font-size:14px;color:var(--text-2)}
+  .links a{transition:color .15s var(--ease)}
+  .links a:hover{color:var(--text)}
+  .nav-btn{height:32px;display:inline-flex;align-items:center;padding:0 16px;border-radius:8px;background:var(--raised);border:1px solid var(--line);color:var(--text)!important;transition:border-color .15s var(--ease)}
+  .nav-btn:hover{border-color:var(--line-strong)}
+  .menu-btn{display:none;width:36px;height:36px;place-items:center;background:none;border:1px solid var(--line);color:var(--text);border-radius:8px;cursor:pointer}
+
+  /* hero */
+  .hero{padding:96px 0 80px;min-height:calc(100vh - 64px);display:flex;align-items:center}
+  .hero .wrap{display:grid;grid-template-columns:1fr 1.05fr;gap:64px;align-items:center;width:100%}
+  .meta{font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;gap:12px;align-items:center;margin-bottom:24px}
+  .meta .sep{width:4px;height:4px;border-radius:50%;background:var(--muted)}
+  h1{font-size:56px;line-height:1.05;font-weight:500;letter-spacing:-.03em}
+  .sub{margin-top:24px;font-size:18px;line-height:1.6;color:var(--text-2);max-width:36rem}
+  .sub b{color:var(--text);font-weight:500}
+  .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:40px}
+  .btn{height:44px;display:inline-flex;align-items:center;gap:8px;padding:0 20px;border-radius:10px;font-size:15px;font-weight:500;transition:background-color .15s var(--ease),border-color .15s var(--ease),transform .12s var(--ease)}
+  .btn:active{transform:scale(.98)}
+  .btn.primary{background:var(--text);color:var(--deep);box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+  .btn.primary:hover{background:#ffffff}
+  .btn.secondary{background:var(--raised);border:1px solid var(--line);color:var(--text)}
+  .btn.secondary:hover{border-color:var(--line-strong)}
+
+  /* payment trace panel: the moment */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.35)}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;height:44px;padding:0 16px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .panel-head b{color:var(--text-2);font-weight:500}
+  .route{display:grid;grid-template-columns:1fr 32px 1fr 32px 1fr;align-items:center;padding:20px 16px;gap:0}
+  .node{background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .node small{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:16px}
+  .node span{display:block;font-size:14px;font-weight:500;margin-top:4px}
+  .node .st{display:flex;align-items:center;gap:6px;margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--text-2)}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--positive)}
+  .link-line{height:1px;background:var(--line-strong);position:relative}
+  .link-line::after{content:"";position:absolute;right:0;top:-3px;border-left:5px solid var(--line-strong);border-top:3.5px solid transparent;border-bottom:3.5px solid transparent}
+  .log{border-top:1px solid var(--line);padding:12px 0;font-family:var(--mono);font-size:12px;line-height:24px}
+  .log div{display:grid;grid-template-columns:96px 52px 56px 1fr;padding:0 16px;color:var(--text-2);white-space:nowrap}
+  .log .t{color:var(--muted)}
+  .log .ok{color:var(--positive)}
+  .log .wn{color:var(--warn)}
+  .log .sys{color:var(--text)}
+  .log .last{background:var(--raised)}
+  .xml{border-top:1px solid var(--line);padding:16px;font-family:var(--mono);font-size:12px;line-height:20px;color:var(--muted);background:var(--deep)}
+  .xml .tg{color:#8aa2d6}.xml .at{color:#c7a46b}.xml .v{color:var(--text)}.xml .amt{color:var(--accent)}
+
+  /* facts */
+  .facts{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .facts .wrap{display:grid;grid-template-columns:1fr 1.4fr 1fr 1.4fr}
+  .fact{padding:24px 24px 24px 0}
+  .fact + .fact{padding-left:24px;border-left:1px solid var(--line)}
+  .fact b{display:block;font-size:20px;font-weight:500;font-variant-numeric:tabular-nums}
+  .fact span{font-size:13px;color:var(--muted)}
+
+  /* sections */
+  section{padding:96px 0}
+  .sec-head{display:grid;grid-template-columns:280px 1fr;gap:32px;margin-bottom:40px;align-items:baseline}
+  h2{font-size:32px;font-weight:500;letter-spacing:-.01em;line-height:1.15}
+  .sec-head p{color:var(--text-2);max-width:40rem}
+
+  /* about */
+  .about{display:grid;grid-template-columns:280px 1fr;gap:32px}
+  .about .body p{color:var(--text-2);max-width:42rem;margin-bottom:16px;font-size:16px}
+  .about .body b{color:var(--text);font-weight:500}
+
+  /* skills */
+  .skills{border-top:1px solid var(--line)}
+  .skill-row{display:grid;grid-template-columns:280px 1fr;gap:32px;padding:20px 0;border-bottom:1px solid var(--line)}
+  .skill-row h3{font-size:15px;font-weight:500}
+  .tags{display:flex;flex-wrap:wrap;gap:8px}
+  .tag{font-size:13px;line-height:20px;padding:4px 10px;border-radius:6px;background:var(--card);border:1px solid var(--line);color:var(--text-2)}
+
+  /* experience */
+  .jobs{border-top:1px solid var(--line)}
+  .job{display:grid;grid-template-columns:280px 1fr;gap:32px;padding:32px 0;border-bottom:1px solid var(--line)}
+  .when{font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+  .stamp{display:inline-flex;align-items:center;gap:8px;padding:2px 8px;border-radius:4px;background:var(--card);border:1px solid var(--line);color:var(--text-2)}
+  .stamp.now{color:var(--accent)}
+  .stamp.now .dot{background:var(--accent)}
+  .job h3{font-size:18px;font-weight:500}
+  .job .co{color:var(--text-2);font-size:15px;margin-top:2px}
+  .job ul{margin-top:16px;padding-left:18px;color:var(--text-2);max-width:46rem}
+  .job li{margin-bottom:8px}
+  .job li::marker{color:var(--muted)}
+  .job li b{color:var(--text);font-weight:500}
+  .more{display:none}
+  .job.open .more{display:list-item}
+  .toggle{margin-top:8px;background:none;border:none;color:var(--text-2);cursor:pointer;font:inherit;font-size:14px;display:inline-flex;align-items:center;gap:6px;transition:color .15s var(--ease)}
+  .toggle:hover{color:var(--text)}
+  .toggle svg{transition:transform .2s var(--ease)}
+  .job.open .toggle svg{transform:rotate(180deg)}
+
+  /* projects */
+  .projects{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .proj{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;transition:border-color .15s var(--ease)}
+  .proj:hover{border-color:var(--line-strong)}
+  .proj .kind{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .proj h3{font-size:18px;font-weight:500;margin:8px 0 12px}
+  .proj p{color:var(--text-2);flex:1}
+  .proj .tags{margin-top:20px}
+  .proj .tag{background:var(--raised)}
+
+  /* education */
+  .learn{display:grid;grid-template-columns:280px 1fr;gap:32px}
+  .degree h3{font-size:18px;font-weight:500}
+  .degree p{color:var(--text-2);margin-top:4px}
+  .degree .stamp{margin-top:12px;font-family:var(--mono);font-size:12px}
+  .degree .langs{margin-top:24px;font-size:14px;color:var(--text-2)}
+  .degree .langs div{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--line)}
+  .degree .langs span{color:var(--muted)}
+  .courses{border-top:1px solid var(--line)}
+  .course{display:grid;grid-template-columns:1fr 160px 96px;gap:16px;padding:12px 0;border-bottom:1px solid var(--line);align-items:baseline}
+  .course b{font-weight:500;font-size:15px}
+  .course span{color:var(--muted);font-size:14px}
+  .course .yr{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+
+  /* contact */
+  .contact{display:grid;grid-template-columns:280px 1fr;gap:32px}
+  .contact p{color:var(--text-2);max-width:36rem;font-size:16px}
+  .c-list{margin-top:32px;border-top:1px solid var(--line);max-width:36rem}
+  .c-row{display:flex;align-items:center;gap:12px;height:52px;border-bottom:1px solid var(--line);color:var(--text);transition:color .15s var(--ease)}
+  .c-row svg{color:var(--muted)}
+  .c-row small{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted)}
+  a.c-row:hover{color:var(--accent)}
+  footer{border-top:1px solid var(--line);padding:24px 0;color:var(--muted);font-size:13px}
+  footer .wrap{display:flex;justify-content:space-between}
+
+  /* one entrance on load */
+  .enter{opacity:0;transform:translateY(8px);animation:enter .45s var(--ease) forwards}
+  .enter:nth-child(2){animation-delay:.05s}.enter:nth-child(3){animation-delay:.1s}.enter:nth-child(4){animation-delay:.15s}
+  @keyframes enter{to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.enter{animation:none;opacity:1;transform:none}}
+
+  @media (max-width:960px){
+    .hero{min-height:0;padding:56px 0 64px}
+    .hero .wrap{grid-template-columns:1fr;gap:48px}
+    h1{font-size:40px}
+    .facts .wrap{grid-template-columns:1fr 1fr}
+    .fact:nth-child(3){padding-left:0;border-left:none}
+    .fact:nth-child(n+3){border-top:1px solid var(--line)}
+    .sec-head,.about,.skill-row,.job,.learn,.contact{grid-template-columns:1fr;gap:12px}
+    .projects{grid-template-columns:1fr}
+    .learn{gap:40px}
+    section{padding:64px 0}
+    .links{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;gap:0;background:var(--deep);border-bottom:1px solid var(--line)}
+    .links.show{display:flex}
+    .links a{padding:12px 32px;border-top:1px solid var(--line)}
+    .nav-btn{margin:12px 32px;justify-content:center;height:40px}
+    .menu-btn{display:grid}
+  }
+  @media (max-width:560px){
+    .wrap{padding:0 20px}
+    h1{font-size:36px}
+    .fact{padding:16px 12px 16px 0}.fact + .fact{padding-left:12px}
+    .fact b{font-size:16px}
+    .route{grid-template-columns:1fr 16px 1fr 16px 1fr;padding:16px 12px}
+    .node{padding:8px}.node span{font-size:12px}
+    .log div{grid-template-columns:56px 1fr;padding:0 12px}
+    .log .t{display:none}.log .lv{display:none}
+    .xml{display:none}
+    .course{grid-template-columns:1fr 56px}.course span{display:none}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a href="#top" class="logo">Hussein Al-jrabaa</a>
+    <div class="links" id="links">
+      <a href="#about">About</a>
+      <a href="#skills">Skills</a>
+      <a href="#experience">Experience</a>
+      <a href="#projects">Projects</a>
+      <a href="#education">Education</a>
+      <a href="#contact" class="nav-btn">Contact</a>
+    </div>
+    <button class="menu-btn" aria-label="Open menu" aria-expanded="false" id="menuBtn"><svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <div class="meta enter">Technical Specialist, Arab Bank <span class="sep"></span> Amman, Jordan</div>
+      <h1 class="enter">Application support and payment integration for banks</h1>
+      <p class="sub enter">I keep Treasury and Sanctions systems running at <b>Arab Bank</b>. Before that I spent three years at <b>EastNets</b> connecting the PaymentSafe payment hub to core banking and SWIFT for banks across the region.</p>
+      <div class="actions enter">
+        <a href="mailto:husseinaljrabaa@gmail.com" class="btn primary">Email me</a>
+        <a href="#experience" class="btn secondary">See experience</a>
+      </div>
+    </div>
+
+    <div class="panel enter" aria-label="Sample payment trace">
+      <div class="panel-head"><b>Payment trace</b><span>sample data</span></div>
+      <div class="route">
+        <div class="node"><small>Core banking</small><span>T24</span><div class="st"><i class="dot"></i>sent</div></div>
+        <div class="link-line"></div>
+        <div class="node"><small>Payment hub</small><span>PaymentSafe</span><div class="st"><i class="dot"></i>screened</div></div>
+        <div class="link-line"></div>
+        <div class="node"><small>Network</small><span>SWIFT</span><div class="st"><i class="dot"></i>ACSC</div></div>
+      </div>
+      <div class="log">
+        <div><span class="t">09:41:02.114</span><span class="lv">INFO</span><span class="sys">T24</span><span>Outbound payment FT2611190042</span></div>
+        <div><span class="t">09:41:02.380</span><span class="lv">INFO</span><span class="sys">PSAFE</span><span>Validated against CBPR+ rules</span></div>
+        <div><span class="t">09:41:02.512</span><span class="lv wn">WARN</span><span class="sys">PSAFE</span><span>Name match 0.71, below threshold</span></div>
+        <div><span class="t">09:41:02.649</span><span class="lv">INFO</span><span class="sys">PSAFE</span><span>Sanctions screening passed</span></div>
+        <div><span class="t">09:41:03.007</span><span class="lv">INFO</span><span class="sys">PSAFE</span><span>pacs.008.001.08 built</span></div>
+        <div class="last"><span class="t">09:41:05.904</span><span class="lv ok">OK</span><span class="sys">SWIFT</span><span class="ok">Settled, status ACSC</span></div>
+      </div>
+      <div class="xml">
+        <div>&lt;<span class="tg">IntrBkSttlmAmt</span> <span class="at">Ccy</span>=<span class="v">"USD"</span>&gt;<span class="amt">48210.00</span>&lt;/<span class="tg">IntrBkSttlmAmt</span>&gt;</div>
+        <div>&lt;<span class="tg">ChrgBr</span>&gt;<span class="v">SHAR</span>&lt;/<span class="tg">ChrgBr</span>&gt;</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="facts">
+  <div class="wrap">
+    <div class="fact"><b>Since 2023</b><span>Working in bank payments</span></div>
+    <div class="fact"><b>T24, Flexcube, Temenos</b><span>Core banking integrations</span></div>
+    <div class="fact"><b>ISO 20022</b><span>CBPR+ rollout</span></div>
+    <div class="fact"><b>BSc Cyber Security</b><span>Al-Balqa' Applied University</span></div>
+  </div>
+</div>
+
+<section id="about">
+  <div class="wrap about">
+    <h2>About</h2>
+    <div class="body">
+      <p>I studied cyber and information security, and I've ended up working where security and money meet: the systems that move, screen and settle bank payments.</p>
+      <p>At <b>Arab Bank</b> I support the Treasury and Sanctions applications. When something breaks I trace it through application logs, SQL results and integration errors, across the application, database, middleware, operating system and network layers, and I work with the owners of each layer until it's fixed.</p>
+      <p>At <b>EastNets</b> I installed and configured PaymentSafe for banks, connected it to T24, Flexcube and Temenos, set up IIS and Tomcat servers, built UAT environments and helped deliver a CBPR+ (ISO 20022) rollout. I write down what I learn so the next person can fix it faster.</p>
+    </div>
+  </div>
+</section>
+
+<section id="skills">
+  <div class="wrap">
+    <div class="sec-head"><h2>Skills</h2></div>
+    <div class="skills">
+      <div class="skill-row"><h3>Support and troubleshooting</h3><div class="tags"><span class="tag">L2 application and production support</span><span class="tag">Root-cause analysis</span><span class="tag">Log analysis</span><span class="tag">Application monitoring</span><span class="tag">UAT and testing</span></div></div>
+      <div class="skill-row"><h3>Payments and integration</h3><div class="tags"><span class="tag">API integration</span><span class="tag">T24 / Temenos</span><span class="tag">Flexcube</span><span class="tag">PaymentSafe</span><span class="tag">SWIFT</span><span class="tag">ISO 20022 / CBPR+</span><span class="tag">SFTP</span></div></div>
+      <div class="skill-row"><h3>Servers and infrastructure</h3><div class="tags"><span class="tag">Windows Server</span><span class="tag">Linux</span><span class="tag">macOS</span><span class="tag">IIS</span><span class="tag">Apache Tomcat</span><span class="tag">MSMQ</span><span class="tag">Vagrant</span><span class="tag">Virtual machines</span><span class="tag">Firewall configuration</span></div></div>
+      <div class="skill-row"><h3>Code and data</h3><div class="tags"><span class="tag">Python</span><span class="tag">SQL Server (SSMS)</span><span class="tag">C#</span><span class="tag">XSLT</span><span class="tag">Bash</span><span class="tag">GitHub</span></div></div>
+      <div class="skill-row"><h3>Working with people</h3><div class="tags"><span class="tag">Customer communication</span><span class="tag">Project management</span><span class="tag">Time management</span><span class="tag">Problem solving</span><span class="tag">Research and development</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="experience">
+  <div class="wrap">
+    <div class="sec-head"><h2>Experience</h2></div>
+    <div class="jobs">
+
+      <div class="job">
+        <div class="when"><span class="stamp now"><i class="dot"></i>2026 → now</span></div>
+        <div>
+          <h3>Technical Specialist</h3>
+          <div class="co">Arab Bank</div>
+          <ul>
+            <li>Technical and application support for <b>Treasury and Sanctions</b> systems in a regulated banking environment</li>
+            <li>Monitor and troubleshoot application services, integrations and interfaces</li>
+            <li>Investigate incidents through application logs, system behavior, SQL results and integration errors</li>
+            <li>Troubleshoot across application, database, middleware, operating system and connectivity layers</li>
+            <li class="more">Work with technical teams, application owners, infrastructure teams and business users to resolve incidents</li>
+            <li class="more">Run first root-cause investigations for recurring issues</li>
+            <li class="more">Assist with configuration, deployments, service restarts, operational changes and recovery</li>
+            <li class="more">Support controlled production changes under banking operational requirements, and write technical documentation</li>
+          </ul>
+          <button class="toggle" aria-expanded="false"><span>Show 4 more</span><svg class="i" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="job">
+        <div class="when"><span class="stamp">2026-04 → 2026-11</span></div>
+        <div>
+          <h3>Technical Consultant</h3>
+          <div class="co">EastNets</div>
+          <ul>
+            <li>Technical consulting and implementation support for enterprise payment solutions and financial applications</li>
+            <li>Troubleshot application, integration, database, middleware and infrastructure issues</li>
+            <li>Coordinated application, infrastructure, database and integration teams in customer environments</li>
+            <li>Supported configuration, deployments, upgrades, testing and operational readiness, and guided customers through go-live</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="job">
+        <div class="when"><span class="stamp">2023-06 → 2026-03</span></div>
+        <div>
+          <h3>Implementation Specialist Engineer</h3>
+          <div class="co">EastNets</div>
+          <ul>
+            <li><b>API integration</b> with core banking (T24, Flexcube, Temenos) and payment systems for transaction processing, message exchange and status sync</li>
+            <li><b>PaymentSafe</b> installation, configuration and maintenance, including workflows, services, external integrations and end-to-end testing</li>
+            <li><b>CBPR+ rollout</b>, configuring and deploying cross-border payment messaging to the ISO 20022 standard</li>
+            <li><b>C# and XSLT</b> orchestration code and transformations on the PaymentSafe payment hub</li>
+            <li class="more"><b>IIS and Tomcat</b>: websites, application pools, security and authentication, WAR deployments, runtime issues solved through logs</li>
+            <li class="more"><b>Vagrant</b> multi-machine environments that reproduce production conditions</li>
+            <li class="more"><b>UAT</b> environments built end to end, with functional, integration and security testing and defect tracking</li>
+            <li class="more"><b>Windows and Linux servers</b>: IIS, MSMQ, .NET Framework, DTC and Windows services, Linux services and logs</li>
+            <li class="more"><b>SFTP and firewalls</b> for secure transfer, and SQL Server tuning and queries for reporting and troubleshooting</li>
+            <li class="more"><b>Customer support</b> through Freshdesk, Teams, phone and email, plus internal knowledge base articles</li>
+            <li class="more"><b>Training</b>: SWIFT payments and back-office operations, and the Techmindsconsulting project management program</li>
+          </ul>
+          <button class="toggle" aria-expanded="false"><span>Show 7 more</span><svg class="i" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="job">
+        <div class="when"><span class="stamp">2023-02 → 2023-06</span></div>
+        <div>
+          <h3>Intern</h3>
+          <div class="co">Samara-Travel.net</div>
+          <ul><li>Helped build the company's website</li></ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="wrap">
+    <div class="sec-head"><h2>Projects</h2><p>Internal tools built at EastNets to make PaymentSafe implementations faster and easier to support</p></div>
+    <div class="projects">
+      <div class="proj">
+        <span class="kind">Internal tool</span>
+        <h3>PaymentSafe implementation assistant</h3>
+        <p>Automates environment validation, configuration checks and preparation before a PaymentSafe deployment, so implementations take less time and fewer manual steps.</p>
+        <div class="tags"><span class="tag">Python</span><span class="tag">SQL Server</span><span class="tag">Windows Server</span><span class="tag">IIS</span><span class="tag">PaymentSafe</span></div>
+      </div>
+      <div class="proj">
+        <span class="kind">Concept</span>
+        <h3>Centralized log monitoring</h3>
+        <p>Collects logs from PaymentSafe components and related services into one place, so a support engineer can follow a problem across services and reach the root cause sooner.</p>
+        <div class="tags"><span class="tag">Python</span><span class="tag">SQL Server</span><span class="tag">Windows Services</span><span class="tag">Log analysis</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="education">
+  <div class="wrap learn">
+    <div class="degree">
+      <h2 style="margin-bottom:24px">Education</h2>
+      <h3>BSc Cyber and Information Security</h3>
+      <p>College of Artificial Intelligence, Al-Balqa' Applied University</p>
+      <span class="stamp">2023</span>
+      <div class="langs">
+        <div>Arabic <span>Native</span></div>
+        <div>English <span>Advanced</span></div>
+      </div>
+    </div>
+    <div>
+      <h2 style="margin-bottom:24px">Courses</h2>
+      <div class="courses">
+        <div class="course"><b>DevOps Beginners to Advanced with Projects</b><span>Udemy</span><span class="yr">2025 → now</span></div>
+        <div class="course"><b>Postman API Fundamentals Student Expert</b><span>Postman Academy</span><span class="yr">2025</span></div>
+        <div class="course"><b>ChatGPT Plugins for IT Professionals</b><span>Pluralsight</span><span class="yr">2024</span></div>
+        <div class="course"><b>Linux Administration</b><span>Pluralsight</span><span class="yr">2024</span></div>
+        <div class="course"><b>Fundamentals of Red Hat Enterprise Linux</b><span>Coursera</span><span class="yr">2024</span></div>
+        <div class="course"><b>Cyber Threat Intelligence 101</b><span>arcX</span><span class="yr">2023</span></div>
+        <div class="course"><b>Security Operations Center (SOC)</b><span>Coursera</span><span class="yr">2023</span></div>
+        <div class="course"><b>Python</b><span>Udemy</span><span class="yr">2021</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap contact">
+    <h2>Contact</h2>
+    <div>
+      <p>I'm interested in roles in banking technology, payment systems, application support and security. Email is the fastest way to reach me.</p>
+      <div class="c-list">
+        <a class="c-row" href="mailto:husseinaljrabaa@gmail.com"><svg class="i" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>husseinaljrabaa@gmail.com<small>Email</small></a>
+        <a class="c-row" href="tel:+962778722203"><svg class="i" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+962 77 872 2203<small>Phone</small></a>
+        <div class="c-row"><svg class="i" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>Amman, Jordan<small>Location</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap"><span>© <span id="yr">2026</span> Hussein Al-jrabaa</span><a href="#top">Back to top</a></div></footer>
+
+<script>
+  const links=document.getElementById('links'),menuBtn=document.getElementById('menuBtn');
+  menuBtn.onclick=()=>{const o=links.classList.toggle('show');menuBtn.setAttribute('aria-expanded',o)};
+  links.querySelectorAll('a').forEach(a=>a.onclick=()=>{links.classList.remove('show');menuBtn.setAttribute('aria-expanded',false)});
+  document.querySelectorAll('.toggle').forEach(b=>{
+    const label=b.querySelector('span'),closed=label.textContent;
+    b.onclick=()=>{const o=b.closest('.job').classList.toggle('open');b.setAttribute('aria-expanded',o);label.textContent=o?'Show less':closed};
+  });
+  document.getElementById('yr').textContent=new Date().getFullYear();
+</script>
+</body>
+</html>
