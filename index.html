@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hussein Al-jrabaa · Banking application support and payment integration</title>
 <meta name="description" content="Hussein Al-jrabaa, Technical Specialist at Arab Bank. Application support and payment integration for banks, based in Amman, Jordan.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="httpas://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -92,6 +92,10 @@
 
   /* about */
   .about{display:grid;grid-template-columns:280px 1fr;gap:32px}
+  .portrait{margin-top:24px;width:200px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px}
+  .portrait img{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:center 20%;border-radius:8px}
+  .portrait figcaption{display:flex;flex-direction:column;padding:8px 4px 4px;font-size:14px;font-weight:500;line-height:20px}
+  .portrait figcaption .mono{font-size:12px;font-weight:400;color:var(--muted);line-height:16px}
   .about .body p{color:var(--text-2);max-width:42rem;margin-bottom:16px;font-size:16px}
   .about .body b{color:var(--text);font-weight:500}
 
@@ -172,6 +176,8 @@
     .fact:nth-child(n+3){border-top:1px solid var(--line)}
     .sec-head,.about,.skill-row,.job,.learn,.contact{grid-template-columns:1fr;gap:12px}
     .projects{grid-template-columns:1fr}
+    .about{gap:24px}
+    .portrait{width:160px;margin-top:16px}
     .learn{gap:40px}
     section{padding:64px 0}
     .links{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;align-items:stretch;gap:0;background:var(--deep);border-bottom:1px solid var(--line)}
@@ -259,7 +265,13 @@
 
 <section id="about">
   <div class="wrap about">
-    <h2>About</h2>
+    <div class="who">
+      <h2>About</h2>
+      <figure class="portrait">
+        <img src="photo.webp" alt="Portrait of Hussein Al-jrabaa" width="560" height="700" loading="lazy">
+        <figcaption><span>Hussein Al-jrabaa</span><span class="mono">Amman, Jordan</span></figcaption>
+      </figure>
+    </div>
     <div class="body">
       <p>I studied cyber and information security, and I've ended up working where security and money meet: the systems that move, screen and settle bank payments.</p>
       <p>At <b>Arab Bank</b> I support the Treasury and Sanctions applications. When something breaks I trace it through application logs, SQL results and integration errors, across the application, database, middleware, operating system and network layers, and I work with the owners of each layer until it's fixed.</p>
